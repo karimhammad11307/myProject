@@ -15,7 +15,10 @@ usage documented in `README.md`. Local database state, connection settings, and
 owner links stay ignored under `.local/` and `.env`. The workspace's sandbox
 blocks PostgreSQL shared-memory initialization and local web-server binding;
 finish setup in a normal user terminal with `npm run dev:local`. The startup
-implementation is on `origin/master`; the new handoff and history notes still
-need pushing from a terminal with GitHub access. GitHub still has `main` as its
-default branch; switch the default to `master` before deleting remote `main`.
-See `PROJECT_HISTORY.md` for details.
+implementation is on the friend's `origin/master`. The user's Vercel log
+identifies `Abdoae35/myProject` and deploys `main`; push current local `master`
+to that repository's `main` using `git push personal master:main`. The player
+CRUD is committed locally, but this workspace cannot resolve GitHub, so push
+from the user's terminal. Apply its Drizzle migration to production with the
+private production `DIRECT_URL` before deploying the updated app. See
+`PROJECT_HISTORY.md` for details.

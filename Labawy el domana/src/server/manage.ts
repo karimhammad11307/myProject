@@ -3,10 +3,10 @@ import { z } from "zod";
 import { db } from "../db";
 import { leagues, members, seasons, links, sessions, activeSeats, audits } from "../db/schema";
 import { memberFor, type Actor } from "./auth";
-import { nameSchema, rulesSchema } from "../lib/domain";
+import { avatarSchema, nameSchema, rulesSchema } from "../lib/domain";
 import { token, hash, linkUrl } from "../lib/security";
 import { insist } from "../lib/errors";
-export const manageSchema=z.object({leagueId:z.uuid(),action:z.enum(["settings","season","archiveSeason","member","link","revokeLink","recoverPlayer"]),name:nameSchema.optional(),timezone:z.string().max(80).optional(),rules:rulesSchema.optional(),version:z.number().int().min(0).optional(),seasonId:z.uuid().optional(),playerId:z.uuid().optional(),role:z.enum(["scorekeeper","player"]).optional(),archived:z.boolean().optional(),kind:z.enum(["invite","view","recovery"]).optional(),linkId:z.uuid().optional()});
+export const manageSchema=z.object({leagueId:z.uuid(),action:z.enum(["settings","season","archiveSeason","member","updatePlayer","link","revokeLink","recoverPlayer"]),name:nameSchema.optional(),playerName:nameSchema.optional(),playerAvatar:avatarSchema.optional(),timezone:z.string().max(80).optional(),rules:rulesSchema.optional(),version:z.number().int().min(0).optional(),seasonId:z.uuid().optional(),playerId:z.uuid().optional(),role:z.enum(["scorekeeper","player"]).optional(),archived:z.boolean().optional(),kind:z.enum(["invite","view","recovery"]).optional(),linkId:z.uuid().optional()});
 export async function manage(actor:Actor,input:z.infer<typeof manageSchema>) {
   return db().transaction(async tx=>{
     const [league]=await tx.select().from(leagues).where(eq(leagues.id,input.leagueId)).for("update");insist(league,404,"League not found.");
@@ -22,12 +22,16 @@ export async function manage(actor:Actor,input:z.infer<typeof manageSchema>) {
     } else if(input.action==="archiveSeason") {
       insist(input.seasonId && typeof input.archived==="boolean",400,"Choose a season and its archive status.");
       const [season]=await tx.update(seasons).set({archived:input.archived}).where(and(eq(seasons.id,input.seasonId),eq(seasons.leagueId,input.leagueId))).returning();insist(season,404,"Season not found in this league.");
-    } else if(input.action==="member" || input.action==="recoverPlayer") {
+    } else if(input.action==="member" || input.action==="updatePlayer" || input.action==="recoverPlayer") {
       insist(input.playerId && input.playerId!==league.ownerId,400,"The owner cannot be changed or recovered through player management.");
       const [target]=await tx.select().from(members).where(and(eq(members.leagueId,input.leagueId),eq(members.playerId,input.playerId)));insist(target,404,"Member not found in this league.");
       if(input.action==="member") {
         if(input.archived) {const [seat]=await tx.select().from(activeSeats).where(and(eq(activeSeats.leagueId,input.leagueId),eq(activeSeats.playerId,input.playerId)));insist(!seat,409,"Finish or void this player's active match before archiving them.");}
         await tx.update(members).set({role:input.role || target.role,archived:input.archived ?? target.archived}).where(and(eq(members.leagueId,input.leagueId),eq(members.playerId,input.playerId)));
+      } else if(input.action==="updatePlayer") {
+        insist(input.playerName && input.playerAvatar,400,"Enter the player's display name and avatar.");
+        await tx.update(members).set({nameOverride:input.playerName,avatarOverride:input.playerAvatar}).where(and(eq(members.leagueId,input.leagueId),eq(members.playerId,input.playerId)));
+        response={id:input.playerId};
       } else {
         insist(!target.archived,400,"Restore this membership before recovery.");
         // Recovery credentials authenticate only this league, never other memberships.
@@ -44,7 +48,7 @@ export async function manage(actor:Actor,input:z.infer<typeof manageSchema>) {
       insist(input.linkId,400,"Choose a link to revoke.");const [l]=await tx.update(links).set({revokedAt:new Date()}).where(and(eq(links.id,input.linkId),eq(links.leagueId,input.leagueId))).returning();insist(l,404,"Link not found in this league.");
     }
     // Never persist or log raw credentials, even inside audit records.
-    await tx.insert(audits).values({leagueId:input.leagueId,actorId:actor.id,action:input.action,after:{playerId:input.playerId,kind:input.kind,seasonId:input.seasonId,role:input.role,archived:input.archived}});
+    await tx.insert(audits).values({leagueId:input.leagueId,actorId:actor.id,action:input.action,after:{playerId:input.playerId,playerName:input.playerName,playerAvatar:input.playerAvatar,kind:input.kind,seasonId:input.seasonId,role:input.role,archived:input.archived}});
     await tx.execute(sql`DELETE FROM rate_limits WHERE updated_at < now() - interval '2 days'`);
     return response;
   });

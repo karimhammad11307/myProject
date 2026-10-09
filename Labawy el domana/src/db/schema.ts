@@ -13,8 +13,9 @@ export const leagues = pgTable("leagues", {
 });
 export const members = pgTable("members", {
   leagueId: uuid("league_id").notNull().references(()=>leagues.id), playerId: uuid("player_id").notNull().references(()=>players.id),
-  role: text("role").$type<"owner"|"scorekeeper"|"player">().notNull().default("player"), archived: boolean("archived").notNull().default(false)
-}, t=>[primaryKey({columns:[t.leagueId,t.playerId]}), check("valid_role",sql`${t.role} in ('owner','scorekeeper','player')`)]);
+  role: text("role").$type<"owner"|"scorekeeper"|"player">().notNull().default("player"), archived: boolean("archived").notNull().default(false),
+  nameOverride: text("name_override"), avatarOverride: text("avatar_override")
+}, t=>[primaryKey({columns:[t.leagueId,t.playerId]}), check("valid_role",sql`${t.role} in ('owner','scorekeeper','player')`), check("valid_member_name_override",sql`${t.nameOverride} is null or length(${t.nameOverride}) between 1 and 60`), check("valid_member_avatar_override",sql`${t.avatarOverride} is null or ${t.avatarOverride} in ('olive','coffee','amber','rose','sky','violet')`)]);
 export const sessions = pgTable("sessions", {
   id: uuid("id").primaryKey().defaultRandom(), tokenHash: text("token_hash").notNull().unique(), playerId: uuid("player_id").notNull().references(()=>players.id),
   scopeLeagueId: uuid("scope_league_id").references(()=>leagues.id), expiresAt: time("expires_at").notNull(), revokedAt: time("revoked_at"), createdAt: time("created_at").notNull().defaultNow()

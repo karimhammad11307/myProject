@@ -1,4 +1,4 @@
-import { and, eq, asc, desc, inArray } from "drizzle-orm";
+import { and, eq, asc, desc, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { leagues, members, players, seasons, matches, sides, participants, rounds, scorers, audits, links } from "../db/schema";
 import { memberFor, type Actor } from "./auth";
@@ -15,7 +15,7 @@ export async function readState(actor:Actor|null,selected?:string,viewer?:string
     else insist(viewer===leagueId,actor?403:401,actor?"You do not have access to this league.":"Open your invitation, private profile, or read-only league link.");
     const [league]=await tx.select({id:leagues.id,name:leagues.name,ownerId:leagues.ownerId,rules:leagues.rules,timezone:leagues.timezone,version:leagues.version}).from(leagues).where(eq(leagues.id,leagueId));insist(league,404,"League not found.");
     if(!leagueList.length) leagueList=[{id:league.id,name:league.name}];
-    const playerRows=await tx.select({id:players.id,name:players.name,avatar:players.avatar,photoVersion:players.photoVersion,role:members.role,archived:members.archived}).from(members).innerJoin(players,eq(players.id,members.playerId)).where(eq(members.leagueId,leagueId)).orderBy(asc(players.name));
+    const playerRows=await tx.select({id:players.id,name:sql<string>`coalesce(${members.nameOverride},${players.name})`,avatar:sql<string>`coalesce(${members.avatarOverride},${players.avatar})`,photoVersion:players.photoVersion,role:members.role,archived:members.archived}).from(members).innerJoin(players,eq(players.id,members.playerId)).where(eq(members.leagueId,leagueId)).orderBy(asc(sql`coalesce(${members.nameOverride},${players.name})`));
     const seasonRows=await tx.select({id:seasons.id,name:seasons.name,archived:seasons.archived}).from(seasons).where(eq(seasons.leagueId,leagueId)).orderBy(desc(seasons.createdAt));
     const matchRows=await tx.select().from(matches).where(eq(matches.leagueId,leagueId)).orderBy(desc(matches.createdAt));
     const ids=matchRows.map(m=>m.id);

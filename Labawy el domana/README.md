@@ -150,6 +150,11 @@ Archived players remain in historical records.
   an owner or scorekeeper grants access.
 - **Spectator:** views the league through a separate read-only link.
 
+Players join through an owner-created invitation. Owners can change a member's
+display name, avatar, or role for that league, and remove or restore a member
+without erasing match history. A player can still edit their own shared profile.
+Member display-name and avatar overrides remain scoped to one league.
+
 Server authorization checks membership and resource league on every protected
 request. Active seats have a unique `(league, player)` constraint, backed by
 transactional league locks, so concurrent starts cannot place a player at two
