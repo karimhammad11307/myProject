@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: domino
+      POSTGRES_PASSWORD: local-development-only
+      POSTGRES_DB: domino_dev
+    ports: ["5432:5432"]
+    volumes: ["domino_data:/var/lib/postgresql/data", "./scripts/local-init.sql:/docker-entrypoint-initdb.d/test.sql:ro"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U domino -d domino_dev"]
+      interval: 3s
+      retries: 10
+volumes:
+  domino_data:
