@@ -1,0 +1,34 @@
+name: Verify Labawy El-Domana
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: domino
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: domino_test
+        ports: [5432:5432]
+        options: --health-cmd "pg_isready -U domino -d domino_test" --health-interval 3s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://domino:ci-only-password@localhost:5432/domino_test
+      DIRECT_URL: postgresql://domino:ci-only-password@localhost:5432/domino_test
+      TEST_DATABASE_URL: postgresql://domino:ci-only-password@localhost:5432/domino_test
+      APP_URL: http://localhost:3000
+      RATE_LIMIT_SECRET: ci-only-isolated-test-secret-32-characters
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run test:integration
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - run: npm run build

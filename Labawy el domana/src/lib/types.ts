@@ -1,0 +1,6 @@
+import type { Rules, Format, Outcome, Stats } from "./domain";
+export type PlayerView={id:string;name:string;avatar:string;photoUrl:string|null;role:"owner"|"scorekeeper"|"player";archived:boolean};
+export type MatchView={id:string;leagueId:string;seasonId:string;creatorId:string;format:Format;state:"draft"|"active"|"completed"|"voided";rules:Rules;version:number;table:string;result:{totals:number[];outcomes:Outcome[]}|null;createdAt:string;updatedAt:string;startedAt:string|null;completedAt:string|null;sides:{id:string;position:number;players:string[]}[];rounds:{id:string;number:number;scores:number[];note:string;voided:boolean;createdAt:string;updatedAt:string}[];canScore:boolean;scorers:string[];audits:{id:string;actorId:string;action:string;before:unknown;after:unknown;createdAt:string}[]};
+export type LeagueView={id:string;name:string;ownerId:string;rules:Rules;timezone:string;version:number};
+export type State={actor:{id:string;name:string;avatar:string;photoUrl?:string|null;scopeLeagueId:string|null}|null;leagues:{id:string;name:string}[];league:LeagueView|null;role:string|null;readOnly:boolean;players:PlayerView[];seasons:{id:string;name:string;archived:boolean}[];matches:MatchView[];links:{id:string;kind:string;expiresAt:string;revokedAt:string|null;playerId:string|null}[];updatedAt:string};
+export type ProfileStats=Stats;
