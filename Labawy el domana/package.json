@@ -7,6 +7,8 @@
   },
   "scripts": {
     "dev": "next dev",
+    "dev:local": "node scripts/dev-local.mjs",
+    "db:local:stop": "node scripts/dev-local.mjs --stop",
     "build": "next build",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit",

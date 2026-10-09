@@ -10,6 +10,34 @@ photo. They use a private link instead of email, a password, or a social account
 
 ## Start locally
 
+### Using PostgreSQL installed on your Mac
+
+With Node.js, npm dependencies (`npm ci`), and PostgreSQL already installed, run:
+
+```sh
+npm run dev:local
+```
+
+This starts a dedicated PostgreSQL instance on `127.0.0.1:55432`, creates the
+development and test databases, applies migrations, seeds sample data once,
+and starts the app at `http://localhost:3000`. Docker is not required for this
+option. Existing PostgreSQL services use their own ports and data directories.
+
+Database files and randomly generated credentials are kept in the ignored
+`.local/` directory. The command writes local connection settings to `.env`
+and saves its previous contents in `.local/env.before-native` on first setup.
+The owner, invitation, and recovery links are printed in your private terminal
+and saved in `.local/owner-links.txt`. Keep that file private.
+
+Run the same command again to resume; existing scores and sample data are
+preserved. Ctrl+C stops the web app. To stop the project's database as well:
+
+```sh
+npm run db:local:stop
+```
+
+### Using Docker
+
 Install **Node.js 24 LTS**, npm, and Docker with Compose. Run these commands from
 this directory. `.env` is ignored by Git; `.env.example` contains placeholders.
 
