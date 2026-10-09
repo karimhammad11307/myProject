@@ -7,3 +7,15 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Current handoff
+
+The local Mac PostgreSQL startup workflow is in `scripts/dev-local.mjs`, with
+usage documented in `README.md`. Local database state, connection settings, and
+owner links stay ignored under `.local/` and `.env`. The workspace's sandbox
+blocks PostgreSQL shared-memory initialization and local web-server binding;
+finish setup in a normal user terminal with `npm run dev:local`. The startup
+implementation is on `origin/master`; the new handoff and history notes still
+need pushing from a terminal with GitHub access. GitHub still has `main` as its
+default branch; switch the default to `master` before deleting remote `main`.
+See `PROJECT_HISTORY.md` for details.
